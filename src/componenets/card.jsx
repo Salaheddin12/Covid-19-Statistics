@@ -4,7 +4,7 @@ const Card = ({ title, value, todayValue }) => {
   let color = "rgba(241, 196, 15,0.5)";
   if (title === "Deaths") color = "rgba(245, 7, 15,0.5)";
   if (title === "Recovered") color = "rgba(63, 209, 4,0.5)";
-
+  
   return (
     <div
       className="card"

@@ -29,7 +29,17 @@
       }
       .leaflet-container {
         height: 400px;
-        width: 100%;
+        max-width: 400px;
+        max-height: 400px;
+      }
+      @media screen and (max-width: 865px) {
+        .container {
+          margin-top: 20px;
+        }
+        .chartjs-render-monitor {
+          height: 75%;
+          width: 75%;
+        }
       }
       /* .leaflet-tile {filter: hue-rotate(180deg) invert(100%);
 } */

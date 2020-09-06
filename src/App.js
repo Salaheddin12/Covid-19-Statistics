@@ -2,33 +2,19 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import StatisticsMap from "./componenets/statisticsMap";
 import Card from "./componenets/card";
-import axios from "axios";
 import Chart from "./componenets/chart";
 import Search from "./componenets/search";
-//axios error interceptor
-axios.interceptors.response.use(null, (error) => {
-  const ExpectedError =
-    error.response && error.response >= 400 && error.response < 500;
-  if (!ExpectedError) {
-    console.log("Logging the error " + error);
-    alert("An unexpected error occurred");
-  }
-  return Promise.reject(error);
-});
+import http from "./services/httpServices";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 //context
 export const popupContext = React.createContext({});
 function App() {
-  const [historicalData, setHistoricalData] = useState({
-    country: "",
-    cases: {},
-    deaths: {},
-    recovered: {},
-  });
   //map position
   const [position, setPosition] = useState([34, -7]);
   //country total data
   const [countryData, setCountryData] = useState({
-    country: "",
+    country: "Morocco",
     deaths: 0,
     active: 0,
     critical: 0,
@@ -59,31 +45,10 @@ function App() {
   });
   //search query to store controlled element Search value
   const [searchQuery, setSearchQuery] = useState("");
-  //fetch global historical data
-  const fetchHistoricalData = async (query) => {
-    axios
-      .get(`https://disease.sh/v3/covid-19/historical/${query}?lastdays=7`)
-      .then((response) => {
-        const { country, timeline } = response.data;
-        const { deaths, cases, recovered } = timeline;
-        console.log(deaths);
-        console.log(Object.values(cases));
-        setHistoricalData({
-          country: country,
-          cases: cases,
-          deaths: deaths,
-          recovered: recovered,
-        });
-        console.log(response.data);
-      })
-      .catch((ex) => {
-        if (ex.response && ex.response.status === 404)
-          alert("oops Page Not Found");
-      });
-  };
+
   //fetch global data
   const fetchData = async () => {
-    axios
+    http
       .get("https://disease.sh/v3/covid-19/all")
       .then((response) => {
         const {
@@ -113,13 +78,13 @@ function App() {
       })
       .catch((ex) => {
         if (ex.response && ex.response.status === 404)
-          alert("oops Page Not Found");
+          toast.error("ooops Page Not Found");
       });
   };
   //fetch country data
   const fetchCountryData = (query) => {
     console.log(query);
-    axios
+    http
       .get(
         `https://disease.sh/v3/covid-19/countries/${query}?strict=true&allowNull=0`
       )
@@ -155,7 +120,7 @@ function App() {
       })
       .catch((ex) => {
         if (ex.response && ex.response.status === 404)
-          alert("oops Page Not Found");
+          toast.error("oops Try Diffrente Country");
       });
   };
   //handleSearch
@@ -165,18 +130,17 @@ function App() {
   //handle search submit
   const handleSearchSubmit = (text) => {
     fetchCountryData(text);
-    fetchHistoricalData(text);
   };
   //Fetching needed data on load
   useEffect(() => {
-    fetchCountryData("Morocco");
-    fetchHistoricalData("Morocco");
+    fetchCountryData(countryData.country);
     fetchData();
   }, []);
   const { deaths, active, critical, cases, recovered, tests } = Data;
   const { todayDeaths, todayCases, todayRecovered } = todayData;
   return (
     <div className="App" style={{ padding: "2rem" }}>
+      <ToastContainer />
       <div
         style={{
           display: "flex",
@@ -193,33 +157,15 @@ function App() {
           handleSubmit={handleSearchSubmit}
         />
 
-        <div
-          className="mapContainer"
-          style={{
-            width: "100%",
-            minWidth: "450px",
-            borderRadius: 8,
-            overflow: "hidden",
-            marginBottom: "4rem",
-            padding: "20px",
-            backgroundColor: "rgba(255, 255, 255,0.2)",
-          }}
-        >
-          <popupContext.Provider value={{ countryData, countryTodayData }}>
-            <StatisticsMap position={position} />
-          </popupContext.Provider>
-        </div>
-        <div
-          style={{
-            borderRadius: 8,
-            width: "75%",
-            minWidth: "450px",
-            overflow: "hidden",
-            padding: "20px",
-            backgroundColor: "rgba(255, 255, 255,0.2)",
-          }}
-        >
-          <Chart data={historicalData} />
+        <div className="country-statistics">
+          <div className="container">
+            <popupContext.Provider value={{ countryData, countryTodayData }}>
+              <StatisticsMap position={position} />
+            </popupContext.Provider>
+          </div>
+          <div className="container">
+            <Chart query={countryData.country} />
+          </div>
         </div>
 
         <div
